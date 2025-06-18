@@ -19,7 +19,7 @@ function Home() {
 
       {/* Titre */}
       <div className="mt-10">
-        <h1 className="text-2xl font-bold text-gray-900 font-handy">Bienvenue chez BubbleHouse !</h1>
+        <h1 className="text-2xl font-bold text-gray-900 font-handy-casual">Bienvenue chez BubbleHouse !</h1>
         <p className="text-lg text-gray-600 mt-2 font-poppins">Le paradis de la relaxation</p>
       </div>
 
@@ -36,7 +36,7 @@ function Home() {
       <div className="mt-10 w-full">
         <p className="text-gray-800 mb-4 font-poppins">Créer un compte pour sauvegarder vos progrès</p>
         <button 
-          onClick={() => navigate('/inscription')}
+          onClick={() => navigate('/inscription-steps')}
           className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-3 px-6 rounded-full transition"
         >
           Continuer avec un Email →

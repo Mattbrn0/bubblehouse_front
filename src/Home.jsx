@@ -4,7 +4,6 @@ function Home() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Ici, vous pourrez ajouter la logique de déconnexion plus tard
     navigate('/');
   };
 
