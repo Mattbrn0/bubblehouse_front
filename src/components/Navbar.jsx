@@ -40,8 +40,8 @@ export default function Navbar() {
       />
       <NavIcon
         icon={<Gamepad2 />}
-        active={location.pathname === '/settings'} 
-        onClick={() => navigate('/settings')}
+        active={location.pathname === '/PageJeux'} 
+        onClick={() => navigate('/PageJeux')}
       />
     </footer>
   );

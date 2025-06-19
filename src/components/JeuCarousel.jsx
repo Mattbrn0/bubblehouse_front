@@ -33,7 +33,7 @@ export default function JeuCarousel() {
     <div className="w-full px-4">
       <Swiper
         spaceBetween={12}
-        slidesPerView={2.2}
+        slidesPerView={3}
         className="w-full"
         breakpoints={{
           640: {
@@ -46,14 +46,16 @@ export default function JeuCarousel() {
           },
         }}
       >
-        {exercises.map((exercise) => (
-          <SwiperSlide key={exercise.id}>
-            <div className="aspect-square rounded-xl overflow-hidden bg-white">
-              <img
-                src={exercise.image_url}
-                alt={exercise.nom}
-                className="w-full h-full object-cover"
-              />
+        {exercises.map((jeux) => (
+          <SwiperSlide key={jeux.id}>
+            <div className="flex justify-center items-center">
+              <div className="w-24 h-24 rounded-xl overflow-hidden bg-white">
+                <img
+                  src={jeux.image_url}
+                  alt={jeux.nom}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </SwiperSlide>
         ))}

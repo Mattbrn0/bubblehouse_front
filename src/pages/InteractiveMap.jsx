@@ -1,115 +1,192 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import Navbar from '../components/Navbar';
-import ChatButton from "@/components/ChatButton";
-import { useNavigate } from 'react-router-dom';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  Polyline,
+  Popup
+} from "react-leaflet";
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import "leaflet/dist/leaflet.css";
+import Navbar from "../components/Navbar";
+import L from "leaflet";
+import { supabase } from "../../supabaseClient";
 
-const blueCircleIcon = L.divIcon({
-  html: `<div style="
-    background-color: #A67DB9;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px solid white;
-  ">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
-      <path d="M12 2L15 8H9L12 2ZM12 22C12.5523 22 13 21.5523 13 21V10H11V21C11 21.5523 11.4477 22 12 22Z"/>
-    </svg>
-  </div>`,
-  className: '',
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
+// Icône par défaut Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const customIcon = L.icon({
-  iconUrl: '/marker-icon.png',
-  iconRetinaUrl: '/marker-icon-2x.png',
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  tooltipAnchor: [16, -28],
-  className: 'custom-pin'
+// Icône personnalisée pour les popups
+const popupIcon = L.divIcon({
+  className: "",
+  html: `
+    <div class="relative">
+      <div class="w-4 h-4 bg-pink-500 rounded-full animate-ping absolute"></div>
+      <div class="w-3 h-3 bg-pink-600 rounded-full relative z-10"></div>
+    </div>
+  `,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
 });
 
-const InteractiveMap = () => {
-  const [popups, setPopups] = useState([]);
-  const navigate = useNavigate();
+// Icône ping animé pour l'utilisateur
+const userPingIcon = L.divIcon({
+  className: "ping-icon",
+  html: `
+    <div class="relative">
+      <div class="w-4 h-4 bg-purple-500 rounded-full animate-ping absolute top-0 left-0"></div>
+      <div class="w-3 h-3 bg-purple-600 rounded-full relative z-10"></div>
+    </div>
+  `,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+function UserLocation({ onUpdate }) {
+  const map = useMap();
 
   useEffect(() => {
-    // Chargement des popups
-    fetch('https://api.monsite.com/popups') // Remplace avec ton endpoint réel
-      .then(res => res.json())
-      .then(data => setPopups(data))
-      .catch(err => console.error("Erreur lors du chargement des popups :", err));
-  }, []);
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        onUpdate?.(coords);
+      },
+      (err) => {
+        console.error("Erreur localisation", err);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 5000,
+      }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [map, onUpdate]);
+
+  return null;
+}
+
+UserLocation.propTypes = {
+  onUpdate: PropTypes.func,
+};
+
+export default function InteractiveMap() {
+  const [popupList, setPopupList] = useState([]);
+  const [userCoords, setUserCoords] = useState(null);
+  const [routeCoords, setRouteCoords] = useState([]);
 
   useEffect(() => {
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
+    async function fetchPopups() {
+      const { data, error } = await supabase
+        .from("pop_up")
+        .select(`
+          id_popup,
+          nom,
+          description,
+          date,
+          localisation (
+            latitude,
+            longitude,
+            adresse,
+            ville,
+            pays
+          )
+        `);
+
+      if (error) {
+        console.error("Erreur Supabase :", error);
+      } else {
+        const formatted = data
+          .filter((item) => item.localisation !== null)
+          .map((item) => ({
+            lat: item.localisation.latitude,
+            lng: item.localisation.longitude,
+            nom: item.nom,
+            description: item.description,
+            date: item.date,
+            adresse: item.localisation.adresse,
+          }));
+        setPopupList(formatted);
+      }
+    }
+
+    fetchPopups();
   }, []);
+
+  const handlePopupClick = async (popup) => {
+    if (!userCoords) return;
+
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${userCoords.lng},${userCoords.lat};${popup.lng},${popup.lat}?overview=full&geometries=geojson`
+    );
+    const json = await response.json();
+    if (json.routes && json.routes.length > 0) {
+      const coords = json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      setRouteCoords(coords);
+    }
+  };
 
   return (
-    <div className="relative h-screen w-screen">
-      {/* Top Bar */}
-      <div className="absolute top-0 left-0 w-full h-24 bg-[#A67DB9] z-[999] rounded-b-3xl flex items-center justify-center text-white text-lg font-semibold">
-        Trouvez votre Bulle
+    <div className="relative w-screen h-screen">
+      
+
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={[45.75, 4.85]}
+          zoom={13}
+          scrollWheelZoom={true}
+          className="w-full h-full"
+        >
+          <TileLayer
+            url="https://tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token=FNdTtFSy71UgsCDHNkgkj6MtwtwFonSedYxOqJpuOBG2MojjEJUZPVoXdfC94OIN"
+            attribution='<a href="https://www.jawg.io?utm_medium=map&utm_source=attribution" target="_blank">&copy; Jawg</a> - <a href="https://www.openstreetmap.org?utm_medium=map-attribution&utm_source=jawg" target="_blank">&copy; OpenStreetMap</a> contributors'
+          />
+
+          <UserLocation onUpdate={(coords) => setUserCoords(coords)} />
+
+          {/* Marqueurs Popups */}
+          {popupList.map((popup, i) => (
+            <Marker
+              key={`popup-${i}`}
+              position={[popup.lat, popup.lng]}
+              icon={popupIcon}
+              eventHandlers={{
+                click: () => handlePopupClick(popup),
+              }}
+            >
+              <Popup>
+                <strong>{popup.nom}</strong><br />
+                {popup.description}<br />
+                <em>{popup.date}</em>
+              </Popup>
+            </Marker>
+          ))}
+
+          {/* Marqueur utilisateur */}
+          {userCoords && (
+            <Marker position={[userCoords.lat, userCoords.lng]} icon={userPingIcon} />
+          )}
+
+          {/* Tracé de l'itinéraire */}
+          {routeCoords.length > 0 && (
+            <Polyline positions={routeCoords} color="blue" weight={5} />
+          )}
+        </MapContainer>
       </div>
 
-      {/* Map */}
-      <MapContainer
-        center={[45.755, 4.845]}
-        zoom={13}
-        scrollWheelZoom={false}
-        className="h-full w-full z-0"
-      >
-        <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {/* Position actuelle (exemple statique ici) */}
-        <Marker position={[45.75, 4.85]} icon={blueCircleIcon} />
-
-        {/* Popups dynamiques */}
-        {popups.map(popup => (
-          <Marker
-            key={popup.id_popup}
-            position={[
-              popup.localisation.latitude,
-              popup.localisation.longitude
-            ]}
-            icon={customIcon}
-          >
-            <Tooltip
-              direction="top"
-              offset={[0, -20]}
-              opacity={0.9}
-              permanent={false}
-              className="bg-white px-2 py-1 rounded shadow-lg"
-            >
-              {popup.nom}
-            </Tooltip>
-          </Marker>
-        ))}
-      </MapContainer>
-
-      <ChatButton onClick={() => navigate("/chat")} />
-
       {/* Navbar */}
-      <div className="absolute bottom-0 left-0 w-full z-[999]">
+      <div className="absolute bottom-0 left-0 w-full z-50">
         <Navbar />
       </div>
     </div>
   );
-};
-
-export default InteractiveMap;
+}

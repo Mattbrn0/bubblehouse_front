@@ -7,19 +7,19 @@ function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between px-6 py-10 text-center font-sans">
+    <div className="h-screen w-full overflow-hidden flex flex-col items-center justify-between px-6 py-10 text-center font-sans bg-[#FAF5F2]">
       {/* Logo */}
       <div className="mt-4">
         <img
           src={Bubblehouse}
           alt="BubbleHouse Logo"
-          className="h-40 mx-auto"
+          className="h-20 mx-auto"
         />
       </div>
 
       {/* Titre */}
-      <div className="mt-10">
-        <h1 className="text-2xl font-bold text-gray-900 font-handy-casual">Bienvenue chez BubbleHouse !</h1>
+      <div className="mt-5">
+        <h1 className="text-2xl font-bold text-gray-900 font-handy-casual">Bienvenue chez BubbleHouse</h1>
         <p className="text-lg text-gray-600 mt-2 font-poppins">Le paradis de la relaxation</p>
       </div>
 
@@ -28,12 +28,12 @@ function Home() {
         <img
           src={Mascotte}
           alt="Mascotte BubbleHouse"
-          className="h-60 mx-auto"
+          className="h-50 mx-auto"
         />
       </div>
 
       {/* Bouton d'inscription */}
-      <div className="mt-10 w-full">
+      <div className=" w-full">
         <p className="text-gray-800 mb-4 font-poppins">Créer un compte pour sauvegarder vos progrès</p>
         <button 
           onClick={() => navigate('/inscription-steps')}

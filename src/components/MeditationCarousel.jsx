@@ -3,7 +3,7 @@ import { supabase } from "../../supabaseClient";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
-export default function MeditationCarousel() {
+export default function JeuCarousel() {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +33,7 @@ export default function MeditationCarousel() {
     <div className="w-full px-4">
       <Swiper
         spaceBetween={12}
-        slidesPerView={2.2}
+        slidesPerView={3}
         className="w-full"
         breakpoints={{
           640: {
@@ -46,14 +46,16 @@ export default function MeditationCarousel() {
           },
         }}
       >
-        {exercises.map((exercise) => (
-          <SwiperSlide key={exercise.id}>
-            <div className="aspect-square rounded-xl overflow-hidden bg-white">
-              <img
-                src={exercise.image_url}
-                alt={exercise.nom}
-                className="w-full h-full object-cover"
-              />
+        {exercises.map((meditation) => (
+          <SwiperSlide key={meditation.id}>
+            <div className="flex justify-center items-center">
+              <div className="w-24 h-24 rounded-xl overflow-hidden bg-white">
+                <img
+                  src={meditation.image_url}
+                  alt={meditation.nom}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </SwiperSlide>
         ))}
