@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ChatButton from "@/components/ChatButton";
+
 import MeditationCarousel from "../components/MeditationCarousel";
 import PlanJournalier from "../components/PlanJournalier";
 import JeuCarousel from "../components/JeuCarousel";
+import ProgressionDashboard from "../components/mood";
 
 export default function Accueil() {
   const navigate = useNavigate();
@@ -48,6 +50,8 @@ export default function Accueil() {
               <span className="text-[#A67DB9]" onClick={() => navigate("/PageJeux")}>Voir tout</span>
             </div>
             <JeuCarousel />
+
+            <ProgressionDashboard/>
         </main>
       </div>
 

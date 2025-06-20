@@ -2,53 +2,55 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import ChatButton from "@/components/ChatButton";
 import { useNavigate } from "react-router-dom";
-
+import { supabase } from "../../supabaseClient";
 
 const Profile = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     prenom: "",
-    dateNaissance: "",
+    nom: "",
     genre: "",
     langue: "",
   });
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const { prenom, dateNaissance, genre, langue } = formData;
+    const { prenom, nom, genre, langue } = formData;
 
-  if (!prenom || !dateNaissance || !genre || !langue) {
-    alert("Veuillez remplir tous les champs obligatoires.");
-    return;
-  }
+    if (!prenom || !nom || !genre || !langue) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
 
-  try {
-    const response = await fetch("http://localhost:3000/api/user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prenom,
-        dob: dateNaissance,
-        genre,
-        langue,
-      }),
-    });
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (!response.ok) throw new Error("Erreur serveur");
+      if (userError || !user) throw new Error("Utilisateur non connecté");
 
-    const data = await response.json();
-    console.log("Utilisateur créé :", data);
-    alert("Profil enregistré avec succès !");
-  } catch (err) {
-    console.error(err);
-    alert("Erreur lors de l’enregistrement.");
-  }
-};
+      const { error } = await supabase
+        .from("users")
+        .update({
+          prenom,
+          nom,
+          genre,
+          langue,
+        })
+        .eq("id_users", user.id);
 
+      if (error) throw error;
+
+      alert("Profil enregistré avec succès !");
+      navigate("/home-page");
+    } catch (err) {
+      console.error(err);
+      alert(`Erreur lors de l’enregistrement. ${err.message}`);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,16 +63,19 @@ const handleSubmit = async (e) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md">
-        <h1 className="text-center text-xl font-semibold mb-2 text-gray-800"> 
+        <h1 className="text-center text-xl font-semibold mb-2 text-gray-800">
           Bravo !
         </h1>
         <p className="text-center text-gray-700 mb-6">
-          En vous inscrivant, vous avez fait le premier pas vers une vie plus heureuse et plus saine.
+          En vous inscrivant, vous avez fait le premier pas vers une vie plus
+          heureuse et plus saine.
         </p>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Prénom</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Prénom
+            </label>
             <input
               name="prenom"
               type="text"
@@ -80,25 +85,30 @@ const handleSubmit = async (e) => {
               placeholder="Prénom"
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date de naissance</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Nom
+            </label>
             <input
-              name="dateNaissance"
-              type="date"
-              value={formData.dateNaissance}
+              name="nom"
+              type="text"
+              value={formData.nom}
               onChange={handleChange}
               className="mt-1 w-full border-b border-purple-400 focus:outline-none focus:border-purple-600 bg-transparent"
-              placeholder="Date de naissance"
+              placeholder="Nom"
             />
           </div>
 
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Genre
+            </label>
             <div className="flex flex-wrap gap-4">
-              {["Femme", "Homme", "Ne préfère pas répondre"].map((option) => (
-                <label key={option} className="flex items-center space-x-2 text-gray-700">
+              {["Femme", "Homme"].map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center space-x-2 text-gray-700"
+                >
                   <input
                     type="radio"
                     name="genre"
@@ -114,15 +124,21 @@ const handleSubmit = async (e) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Langue</label>
-            <input
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Langue
+            </label>
+            <select
               name="langue"
-              type="text"
               value={formData.langue}
               onChange={handleChange}
-              className="mt-1 w-full border-b border-purple-400 focus:outline-none focus:border-purple-600 bg-transparent"
-              placeholder="Langue"
-            />
+              className="mt-1 w-full border border-purple-300 bg-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-gray-800"
+            >
+              <option value="">Choisissez une langue</option>
+              <option value="Français">Français</option>
+              <option value="Anglais">Anglais</option>
+              <option value="Espagnol">Espagnol</option>
+              <option value="Allemand">Allemand</option>
+            </select>
           </div>
 
           <div className="flex justify-center mt-8">
