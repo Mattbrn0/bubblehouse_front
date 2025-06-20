@@ -24,7 +24,6 @@ dist-ssr
 *.sw?
 
 # Ignore tous les fichiers image
-*.png
 *.jpg
 *.jpeg
 *.gif
