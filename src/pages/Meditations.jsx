@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import ChatButton from "@/components/ChatButton";
+import ChatButton from "../components/ChatButton";
 import Navbar from "../components/Navbar";
 
 export default function PageMeditation() {

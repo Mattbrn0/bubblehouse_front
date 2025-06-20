@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import ChatButton from "@/components/ChatButton";
+import ChatButton from "../components/ChatButton";
 import MeditationCarousel from "../components/MeditationCarousel";
 import PlanJournalier from "../components/PlanJournalier";
 import JeuCarousel from "../components/JeuCarousel";

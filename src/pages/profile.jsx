@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import ChatButton from "@/components/ChatButton";
+import ChatButton from "../components/ChatButton";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 
