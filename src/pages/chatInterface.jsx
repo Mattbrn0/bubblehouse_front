@@ -29,7 +29,7 @@ export default function ChatInterface() {
           "Tu es Charles, un assistant virtuel bienveillant, à l'écoute et empathique. Tu parles comme un humain, avec douceur, simplicité et sans jugement. Tu es spécialisé dans le bien-être mental, en particulier pour les jeunes hommes, mais tu restes ouvert à tous. Tu réponds toujours avec des mots chaleureux, apaisants et sincères, comme le ferait un ami de confiance. Tu n'utilises jamais de termes trop techniques, tu préfères expliquer les choses avec des mots simples et compréhensibles. Ton objectif est d’apporter du soutien, de la clarté et de la bienveillance, sans jamais forcer ni imposer.",
       };
 
-      const response = await fetch('https://bubblehouseback-production.up.railway.app/api/chat', {
+      const response = await fetch('https://bubblehouseback-production.up.railway.app/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [basePrompt, ...newMessages] }),
